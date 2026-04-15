@@ -1,0 +1,18 @@
+# Build context lives at the repo root (web/Dockerfile uses context: .).
+# Exclude everything that must not leak into the build, especially nested
+# node_modules whose symlinks would collide with the fresh pnpm store.
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/*.pyc
+.git
+.env
+.env.local
+.github
+node_modules

@@ -39,7 +39,7 @@ def build_worker(queue_name: str | None = None) -> Worker:
 
 
 async def run() -> None:
-    logging.basicConfig(level=get_settings().log_level)
+    logging.basicConfig(level=get_settings().log_level.upper())
     worker = build_worker()
     logger.info("Worker listening on queue '%s'", get_queue_name())
 
