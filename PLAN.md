@@ -110,9 +110,9 @@ Goal: a user can upload a transcript, see it appear in a list, and watch its sta
 - [ ] Logged-in user sees their own meetings
 - [ ] Uploading a file adds a row with `queued` status
 - [ ] Status auto-refreshes every 3s (polling for now — replaced by SSE in T22)
-**Verification:** Playwright test uploads a fixture `.txt` and asserts the row appears.
+**Verification:** Vitest unit tests for `MeetingTable` (status badges + polling) and the `/api/meetings` route handler (POST proxy). Playwright e2e for the upload flow is deferred to T15, when the Playwright harness is introduced for the results page (one setup amortised across both tests).
 **Dependencies:** T04, T05
-**Files:** `web/app/meetings/page.tsx`, `web/components/MeetingTable.tsx`, `web/components/UploadButton.tsx`, `web/tests/e2e/upload.spec.ts`
+**Files:** `web/app/meetings/page.tsx`, `web/components/MeetingTable.tsx`, `web/components/UploadButton.tsx`, `web/app/api/meetings/route.ts`, `web/tests/unit/MeetingTable.test.tsx`, `web/tests/unit/api-meetings-route.test.ts`, plus `api/app/routes/meetings.py` (extend with `GET /meetings`)
 **Scope:** M
 
 ### Task 09: Whisper audio ingestion path

@@ -1,15 +1,16 @@
-"""POST /meetings — accept transcript upload, persist row, enqueue job."""
+"""POST /meetings — upload transcript and enqueue. GET /meetings — list per user."""
 from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import models
 from app.db.session import get_db
 from app.ingestion.parser import UnsupportedTranscriptFormatError, parse_transcript
-from app.models.io import MeetingCreateResponse
+from app.models.io import MeetingCreateResponse, MeetingSummaryItem
 from app.queue import enqueue_meeting_job
 
 router = APIRouter(tags=["meetings"])
@@ -49,3 +50,16 @@ async def create_meeting(
     await enqueue_meeting_job(str(meeting.id))
 
     return MeetingCreateResponse.model_validate(meeting)
+
+
+@router.get("/meetings", response_model=list[MeetingSummaryItem])
+def list_meetings(
+    db: Annotated[Session, Depends(get_db)],
+    user_id: Annotated[str, Query(min_length=1, max_length=255)],
+) -> list[MeetingSummaryItem]:
+    rows = db.execute(
+        select(models.Meeting)
+        .where(models.Meeting.user_id == user_id)
+        .order_by(models.Meeting.created_at.desc())
+    ).scalars().all()
+    return [MeetingSummaryItem.model_validate(row) for row in rows]

@@ -1,19 +1,13 @@
 import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
-const requireEnv = (key: string): string => {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-  return value;
-};
+const readEnv = (key: string): string => process.env[key] ?? '';
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: requireEnv('GOOGLE_CLIENT_ID'),
-      clientSecret: requireEnv('GOOGLE_CLIENT_SECRET'),
+      clientId: readEnv('GOOGLE_CLIENT_ID'),
+      clientSecret: readEnv('GOOGLE_CLIENT_SECRET'),
     }),
   ],
   session: { strategy: 'jwt' },
