@@ -1,0 +1,15 @@
+[00:00] Avery: Post-incident review. Production went down for 14 minutes yesterday after the 3:02pm deploy.
+[00:15] Rahul: Root cause was a migration that took an exclusive lock on the users table. The health check timed out, the load balancer marked all three pods unhealthy, and Kubernetes restarted them into the same locked state.
+[00:35] Avery: OK — three corrective actions. First, we need to move destructive migrations behind a feature flag so they can be gated separately from deploys.
+[00:55] Rahul: I'll write an ADR on migration discipline. Exclusive-lock migrations need to run off-hours with explicit on-call sign-off.
+[01:10] Avery: Good. Rahul, please draft the ADR by next Friday.
+[01:18] Rahul: Will do.
+[01:22] Avery: Second — our health check is too strict. It returned 500 on any database connection failure, which is what killed us. Let's make it return 503 only if the pod can't serve any requests, and cache the check result for 30 seconds.
+[01:45] Marta: I can own that. This week.
+[01:48] Avery: Marta, please loosen the health check and ship it this week.
+[01:54] Marta: On it.
+[01:58] Avery: Third — no more deploys during business hours until we have a staging environment that mirrors prod schema.
+[02:10] Rahul: Agreed. Effective immediately?
+[02:15] Avery: Yes. Effective now. I'll put it in writing in the runbook.
+[02:22] Marta: One more question — should we set up PagerDuty escalation to the CTO for any 5xx spike over 5%?
+[02:35] Avery: Let's defer that decision to next week's SRE sync. Not today.

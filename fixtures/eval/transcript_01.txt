@@ -1,0 +1,14 @@
+[00:00] Kiran: Thanks for joining. Quick product standup before we block the afternoon for the release.
+[00:08] Priya: Let's start with the vector DB. We've been going back and forth between pgvector and Pinecone.
+[00:15] Kiran: I want to land this today. Our data volume stays under a few million rows for the foreseeable future, and we're already on Postgres. I think we should adopt pgvector and move on.
+[00:30] Priya: Works for me. I'll update the ADR.
+[00:34] Kiran: Priya, please write the ADR by Friday so the rest of the team sees the rationale before they start building.
+[00:42] Priya: Got it. Friday it is.
+[00:47] Kiran: Second thing — deploy target. Railway or Render?
+[00:52] Omar: I'd vote Railway. Their Postgres tier includes pgvector out of the box, and the worker deploys are painless.
+[01:05] Kiran: Agreed. Let's deploy to Railway for the MVP. We can revisit if we hit scaling limits.
+[01:15] Omar: I'll set up the Railway project this week.
+[01:20] Kiran: Omar, please set up the Railway project by end of week.
+[01:25] Omar: On it.
+[01:30] Kiran: Last thing — the eval harness. We need to ship it alongside the agents so we're not flying blind on prompt changes.
+[01:45] Priya: Agreed. I'll cover that with the agent PRs.

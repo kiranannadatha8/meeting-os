@@ -1,0 +1,38 @@
+{
+  "decisions": [
+    {
+      "title": "Halt business-hours deploys until staging mirrors prod schema",
+      "rationale": "prevent a repeat of yesterday's schema-migration outage",
+      "source_quote": "no more deploys during business hours until we have a staging environment that mirrors prod schema"
+    }
+  ],
+  "action_items": [
+    {
+      "title": "Draft ADR on migration discipline",
+      "owner": "Rahul",
+      "due_date": "2026-04-24",
+      "source_quote": "please draft the ADR by next Friday"
+    },
+    {
+      "title": "Loosen the health check and add caching",
+      "owner": "Marta",
+      "due_date": "2026-04-17",
+      "source_quote": "loosen the health check and ship it this week"
+    },
+    {
+      "title": "Add business-hours deploy ban to the runbook",
+      "owner": "Avery",
+      "due_date": null,
+      "source_quote": "I'll put it in writing in the runbook"
+    }
+  ],
+  "summary": {
+    "tldr": "Team debriefed a 14-minute outage caused by a schema migration that locked the users table and killed health checks. Avery halted business-hours deploys until staging mirrors prod; Rahul owns a migration ADR and Marta will loosen the health check this week. PagerDuty CTO-escalation decision was deferred.",
+    "highlights": [
+      "Halt business-hours deploys",
+      "Draft migration-discipline ADR",
+      "Loosen the health check",
+      "Defer PagerDuty CTO escalation to next SRE sync"
+    ]
+  }
+}

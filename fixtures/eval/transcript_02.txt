@@ -1,0 +1,13 @@
+[00:00] Lee: OK, auth rewrite sync. Legal's deadline is the 30th and we need to pick an approach today.
+[00:12] Sam: I want to retire the homegrown JWT middleware. It's storing the raw session token in a cookie and the new compliance rules don't allow that.
+[00:25] Lee: Agreed. The question is Clerk vs Auth0 vs rolling our own refactor.
+[00:35] Jess: I've shipped with Clerk twice. It handles session rotation, SSO, and the compliance paperwork is already done. It'll save us a month of engineering.
+[00:55] Sam: Cost?
+[01:00] Jess: $25/MAU at our volume is negligible.
+[01:05] Lee: Fine — let's adopt Clerk. Jess, can you own the migration?
+[01:10] Jess: Yes. I'll have a proof-of-concept by next Wednesday.
+[01:18] Lee: Great. Sam, you'll write the migration plan so the rest of the team knows what's coming. Have it ready by Monday.
+[01:30] Sam: Monday's tight but doable.
+[01:35] Lee: One more — we're going to stop accepting new feature PRs that touch the old middleware starting this Friday. Anything in flight gets finished; new work goes through Clerk.
+[01:50] Jess: I'll announce that in #eng today.
+[01:55] Lee: Perfect. Let's wrap.

@@ -1,0 +1,53 @@
+name: eval
+
+on:
+  pull_request:
+    paths:
+      - 'api/app/agents/**'
+      - 'api/app/graph.py'
+      - 'api/app/pipeline.py'
+      - 'api/app/eval/**'
+      - 'fixtures/eval/**'
+      - 'fixtures/eval_baseline.json'
+      - '.github/workflows/eval.yml'
+  workflow_dispatch:
+
+jobs:
+  run-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WORKDIR: api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Sync dependencies
+        working-directory: ${{ env.WORKDIR }}
+        run: uv sync
+
+      - name: Run eval harness
+        working-directory: ${{ github.workspace }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd api
+          PYTHONPATH=. .venv/bin/python -m app.eval.run \
+            --fixtures ../fixtures/eval \
+            --baseline ../fixtures/eval_baseline.json \
+            --output ../eval_scorecard.json
+
+      - name: Upload scorecard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-scorecard
+          path: eval_scorecard.json

@@ -1,0 +1,37 @@
+{
+  "decisions": [
+    {
+      "title": "Conditional team-invite based on email domain",
+      "rationale": "preserves team-formation signal for corporate signups while cutting bounce for solo users",
+      "source_quote": "let's go with conditional team-invite based on email domain"
+    },
+    {
+      "title": "Move logo upload to post-onboarding",
+      "rationale": "current in-flow placement is mostly ignored",
+      "source_quote": "Logo upload post-onboarding"
+    }
+  ],
+  "action_items": [
+    {
+      "title": "Pull signup-domain split for last 90 days",
+      "owner": "Tomás",
+      "due_date": "2026-04-16",
+      "source_quote": "pull the exact signup-domain split for the last 90 days by Thursday"
+    },
+    {
+      "title": "Spec conditional-flow state machine and update Figma",
+      "owner": "Yuki",
+      "due_date": "2026-04-20",
+      "source_quote": "Ready for review next Monday"
+    }
+  ],
+  "summary": {
+    "tldr": "Onboarding redesign will gate the team-invite step on corporate vs personal email domain, keeping activation signal while reducing solo-user bounce. Logo upload moves out of the flow to post-onboarding. Tomás gathers signup-domain data by Thursday; Yuki specs the state machine for next Monday.",
+    "highlights": [
+      "Conditional team-invite by email domain",
+      "Move logo upload post-onboarding",
+      "Pull 90-day signup-domain split",
+      "Spec conditional-flow state machine"
+    ]
+  }
+}

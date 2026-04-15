@@ -1,0 +1,48 @@
+{
+  "decisions": [
+    {
+      "title": "Enable auto-suspend on Snowflake analytics warehouse",
+      "rationale": "two-minute timeout saves about $6k/mo in idle compute",
+      "source_quote": "Let's do that"
+    },
+    {
+      "title": "Decommission the old GKE cluster",
+      "rationale": "only one staging workload remains and it's easy to move",
+      "source_quote": "Let's decommission the old GKE cluster"
+    },
+    {
+      "title": "Defer reserved-instance commitment",
+      "rationale": "traffic pattern has shifted; need benchmarks before a 1-year commit",
+      "source_quote": "Fine, defer it"
+    }
+  ],
+  "action_items": [
+    {
+      "title": "Ship Snowflake auto-suspend config",
+      "owner": "Carlos",
+      "due_date": "2026-04-17",
+      "source_quote": "ship the auto-suspend config by end of this week"
+    },
+    {
+      "title": "Decommission old GKE cluster",
+      "owner": "Carlos",
+      "due_date": "2026-04-30",
+      "source_quote": "target end of April"
+    },
+    {
+      "title": "Present reserved-instance analysis at budget sync",
+      "owner": "Carlos",
+      "due_date": "2026-04-21",
+      "source_quote": "present the RI analysis at next week's budget sync"
+    }
+  ],
+  "summary": {
+    "tldr": "Q3 budget review surfaced 18% cloud-spend overrun. Team approved Snowflake auto-suspend and old GKE cluster decommission, deferred reserved-instance commitment for benchmarking. Marketing $40k shortfall raised to board — no in-room action.",
+    "highlights": [
+      "Snowflake auto-suspend saves $6k/mo",
+      "Decommission old GKE cluster by April 30",
+      "Defer reserved-instance commit pending analysis",
+      "Escalate marketing shortfall to board"
+    ]
+  }
+}

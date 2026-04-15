@@ -1,0 +1,43 @@
+{
+  "decisions": [
+    {
+      "title": "Adopt Clerk for auth",
+      "rationale": "handles session rotation, SSO, compliance; saves a month of engineering",
+      "source_quote": "let's adopt Clerk"
+    },
+    {
+      "title": "Freeze new PRs against old middleware",
+      "rationale": "prevent new work piling onto the deprecated path during the migration",
+      "source_quote": "we're going to stop accepting new feature PRs that touch the old middleware starting this Friday"
+    }
+  ],
+  "action_items": [
+    {
+      "title": "Build Clerk migration proof-of-concept",
+      "owner": "Jess",
+      "due_date": "2026-04-22",
+      "source_quote": "I'll have a proof-of-concept by next Wednesday"
+    },
+    {
+      "title": "Write the migration plan",
+      "owner": "Sam",
+      "due_date": "2026-04-20",
+      "source_quote": "Have it ready by Monday"
+    },
+    {
+      "title": "Announce middleware freeze in #eng",
+      "owner": "Jess",
+      "due_date": null,
+      "source_quote": "I'll announce that in #eng today"
+    }
+  ],
+  "summary": {
+    "tldr": "Team chose Clerk over Auth0 and a refactor to meet legal's compliance deadline. Jess owns the POC, Sam writes the migration plan, and new PRs against the old middleware are frozen starting Friday.",
+    "highlights": [
+      "Adopt Clerk for auth",
+      "Freeze new PRs on old middleware",
+      "Clerk migration POC by next Wednesday",
+      "Migration plan by Monday"
+    ]
+  }
+}

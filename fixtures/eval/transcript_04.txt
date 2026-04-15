@@ -1,0 +1,18 @@
+[00:00] Dana: Thanks for making time. Budget review for Q3.
+[00:08] Carlos: OK — the headline is we're 18% over on cloud spend year to date and $40k short of our marketing target.
+[00:22] Dana: Two separate problems. Let's take the cloud first.
+[00:28] Carlos: Biggest single line is the data warehouse. Snowflake is $22k/mo and most of that is idle warehouses not suspended.
+[00:40] Dana: Can we just auto-suspend them?
+[00:43] Carlos: Yes. Two-minute timeout on the analytics warehouse saves about $6k/mo.
+[00:50] Dana: Let's do that. Carlos, ship the auto-suspend config by end of this week.
+[00:58] Carlos: Will do.
+[01:02] Dana: Second cloud thing — we still have the old GKE cluster from the migration. Is anything running on it?
+[01:12] Carlos: One staging workload. Easy to move.
+[01:15] Dana: Let's decommission the old GKE cluster. Carlos, target end of April.
+[01:22] Carlos: April 30, confirmed.
+[01:28] Dana: On marketing — we're short $40k. I don't think that changes anything operationally this quarter; we'll raise it with the board at the next review. Not an action item for this room.
+[01:45] Carlos: Agreed.
+[01:50] Dana: Last thing — I want to move to reserved instances for the always-on web tier. That's another $3k/mo.
+[02:00] Carlos: We should benchmark first; the traffic pattern has shifted and I'm not sure 1-year reserved is the right commit. Let me analyze and come back next week.
+[02:15] Dana: Fine, defer it. Carlos, present the RI analysis at next week's budget sync.
+[02:25] Carlos: Got it.

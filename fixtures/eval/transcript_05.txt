@@ -1,0 +1,14 @@
+[00:00] Noor: Hi all. Design crit for the onboarding redesign. I'll share the Figma.
+[00:10] Tomás: The new flow is three steps instead of five: email + name, team invite, workspace setup.
+[00:22] Noor: I like the reduction. One concern — the team-invite step is blocking, and we know 40% of solo users bounce there.
+[00:38] Tomás: That's the point of the redesign. If we make it skippable, we lose the team-formation signal we rely on for activation.
+[00:50] Yuki: What if we make it conditional — show team invite only if the signup email is a corporate domain?
+[01:00] Noor: I love that. Can we get the data on what % of signups use gmail vs corporate?
+[01:08] Tomás: Roughly 55% corporate, 45% personal. I can get exact numbers.
+[01:15] Noor: OK — let's go with conditional team-invite based on email domain. Tomás, pull the exact signup-domain split for the last 90 days by Thursday.
+[01:30] Tomás: Will do.
+[01:35] Yuki: I'll spec the conditional-flow state machine and update the Figma. Ready for review next Monday.
+[01:45] Noor: Perfect. One more thing — the workspace setup step has a logo upload that's optional but prominently placed. Should we move it to post-onboarding?
+[02:00] Tomás: Yes. Logo upload post-onboarding. Nobody uploads it in the flow anyway.
+[02:08] Noor: Agreed. Yuki, include that in your spec.
+[02:14] Yuki: Noted.
