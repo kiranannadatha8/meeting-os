@@ -10,7 +10,7 @@ pgvector path.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import pytest
@@ -97,7 +97,7 @@ def _row(
     return (
         meeting_id,
         title,
-        created_at or datetime(2026, 4, 15, 10, 0, tzinfo=timezone.utc),
+        created_at or datetime(2026, 4, 15, 10, 0, tzinfo=UTC),
         content,
         distance,
     )

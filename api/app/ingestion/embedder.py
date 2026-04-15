@@ -30,9 +30,11 @@ class _EmbeddingsClient(Protocol):
 
 
 def _default_client() -> _EmbeddingsClient:
+    from typing import cast
+
     from openai import OpenAI  # local import keeps unit tests offline
 
-    return OpenAI(api_key=get_settings().openai_api_key)
+    return cast(_EmbeddingsClient, OpenAI(api_key=get_settings().openai_api_key))
 
 
 def embed_chunks(

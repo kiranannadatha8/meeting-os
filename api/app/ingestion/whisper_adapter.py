@@ -36,9 +36,11 @@ class _AudioClient(Protocol):
 
 
 def _default_client() -> _AudioClient:
+    from typing import cast
+
     from openai import OpenAI  # local import keeps unit tests offline
 
-    return OpenAI(api_key=get_settings().openai_api_key)
+    return cast(_AudioClient, OpenAI(api_key=get_settings().openai_api_key))
 
 
 def transcribe_audio(

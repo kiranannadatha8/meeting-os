@@ -63,7 +63,11 @@ class _FakeClient:
         self.audio = audio
 
 
-def _client_with(*, texts: list[str] | None = None, errors: list[Exception] | None = None) -> _FakeClient:
+def _client_with(
+    *,
+    texts: list[str] | None = None,
+    errors: list[Exception] | None = None,
+) -> _FakeClient:
     api = _FakeTranscriptionsAPI(texts=texts, errors=errors)
     return _FakeClient(_FakeAudioAPI(api))
 

@@ -11,9 +11,10 @@ import logging
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.agents._base import PipelineState
 from app.db import models
 from app.db.session import SessionLocal
 from app.graph import run_graph
@@ -49,7 +50,7 @@ def process_meeting(meeting_id: str) -> None:
         logger.exception("Pipeline failed for meeting %s", meeting_id)
         with SessionLocal() as session:
             session.execute(
-                models.Meeting.__table__.update()
+                update(models.Meeting)
                 .where(models.Meeting.id == target_id)
                 .values(status="failed", error_message=str(exc))
             )
@@ -58,7 +59,7 @@ def process_meeting(meeting_id: str) -> None:
 
     with SessionLocal() as session:
         session.execute(
-            models.Meeting.__table__.update()
+            update(models.Meeting)
             .where(models.Meeting.id == target_id)
             .values(status="complete", error_message=None)
         )
@@ -89,7 +90,7 @@ def _run_agents(meeting_id: UUID, transcript: str) -> None:
         _persist_agent_output(session, meeting_id, state)
         if run_ids:
             session.execute(
-                models.Meeting.__table__.update()
+                update(models.Meeting)
                 .where(models.Meeting.id == meeting_id)
                 .values(langsmith_run_ids=run_ids)
             )
@@ -114,7 +115,9 @@ def _persist_chunks(
     session.add_all(rows)
 
 
-def _persist_agent_output(session: Session, meeting_id: UUID, state: dict) -> None:
+def _persist_agent_output(
+    session: Session, meeting_id: UUID, state: PipelineState
+) -> None:
     """Write decisions, action items, and the summary row from graph state.
 
     T10 ships with no-op agents so `decisions` / `action_items` are empty;

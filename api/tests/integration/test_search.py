@@ -6,7 +6,7 @@ to exactly one meeting; the API must rank that meeting's chunks first.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -137,4 +137,4 @@ def test_created_at_round_trip_is_iso(
     iso = resp.json()["results"][0]["meeting_created_at"]
     parsed = datetime.fromisoformat(iso.replace("Z", "+00:00"))
     assert parsed.tzinfo is not None
-    assert parsed <= datetime.now(timezone.utc)
+    assert parsed <= datetime.now(UTC)

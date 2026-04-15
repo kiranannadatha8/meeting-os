@@ -31,7 +31,7 @@ def upsert_integration(
             user_id=payload.user_id,
             provider=payload.provider.value,
             api_key=payload.api_key,
-            metadata=payload.metadata,  # type: ignore[arg-type]
+            metadata=payload.metadata,
         )
     except UnknownProviderError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

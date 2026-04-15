@@ -8,7 +8,8 @@ OpenAI; the DB session is the standard `get_db` dependency.
 """
 from __future__ import annotations
 
-from typing import Annotated, Callable
+from collections.abc import Callable
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select

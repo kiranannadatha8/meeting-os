@@ -51,9 +51,11 @@ def _default_client() -> _AnthropicClient | None:
     settings = get_settings()
     if not settings.anthropic_api_key:
         return None
+    from typing import cast
+
     from anthropic import Anthropic
 
-    return Anthropic(api_key=settings.anthropic_api_key)
+    return cast(_AnthropicClient, Anthropic(api_key=settings.anthropic_api_key))
 
 
 def _extract_text(message: Any) -> str:

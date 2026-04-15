@@ -1,0 +1,101 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  api-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: meetingos
+          POSTGRES_PASSWORD: meetingos
+          POSTGRES_DB: meetingos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U meetingos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://meetingos:meetingos@localhost:5432/meetingos
+      REDIS_URL: redis://localhost:6379/0
+      # Static Fernet key so tests that round-trip encrypted secrets work.
+      # Not a production value — generated once via Fernet.generate_key().
+      MEETING_OS_ENCRYPTION_KEY: NVUNFJvkE-xmjrhuJDf19IKn3AwCDIpdpY2xkF7zJXU=
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Run alembic migrations
+        run: uv run alembic upgrade head
+
+      - name: Pytest (unit + integration)
+        run: uv run pytest -v
+
+  web-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install
+        working-directory: ${{ github.workspace }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Vitest
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+        env:
+          NEXTAUTH_SECRET: ci-build-only-not-a-real-secret

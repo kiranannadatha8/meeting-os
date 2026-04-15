@@ -51,7 +51,7 @@ def _validate_provider(provider: str) -> Provider:
         raise UnknownProviderError(
             f"Unsupported provider '{provider}'; expected one of {SUPPORTED_PROVIDERS}"
         )
-    return provider  # type: ignore[return-value]
+    return provider
 
 
 class MCPClient:
