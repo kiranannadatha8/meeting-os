@@ -7,12 +7,14 @@ import { DecisionCard } from '@/components/DecisionCard';
 import { DispatchModal, type DispatchMode } from '@/components/DispatchModal';
 import { SummaryPanel } from '@/components/SummaryPanel';
 import type { MeetingDetail as MeetingDetailPayload } from '@/lib/meeting-detail';
+import { useSSE } from '@/lib/useSSE';
 
 interface MeetingDetailProps {
   meetingId: string;
 }
 
-const POLL_INTERVAL_MS = 3000;
+const isTerminal = (status: MeetingDetailPayload['status'] | undefined): boolean =>
+  status === 'complete' || status === 'failed';
 
 const STATUS_CLASSES = {
   queued: 'bg-slate-100 text-slate-700',
@@ -54,30 +56,17 @@ export function MeetingDetail({ meetingId }: MeetingDetailProps): JSX.Element {
   }, [meetingId]);
 
   useEffect(() => {
-    let cancelled = false;
-    let intervalId: ReturnType<typeof setInterval> | null = null;
-
-    const run = async () => {
-      const snapshot = await load();
-      if (cancelled) return;
-      const activeStatus = snapshot?.status ?? 'queued';
-      if (activeStatus === 'queued' || activeStatus === 'processing') {
-        intervalId = setInterval(async () => {
-          const next = await load();
-          if (next && next.status !== 'queued' && next.status !== 'processing' && intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-          }
-        }, POLL_INTERVAL_MS);
-      }
-    };
-    run();
-
-    return () => {
-      cancelled = true;
-      if (intervalId) clearInterval(intervalId);
-    };
+    load();
   }, [load]);
+
+  const sseEnabled = meeting !== null && !isTerminal(meeting.status);
+  const sseStatus = useSSE(meetingId, { enabled: sseEnabled });
+
+  useEffect(() => {
+    if (sseStatus === null) return;
+    if (sseStatus.status === meeting?.status) return;
+    load();
+  }, [sseStatus, meeting?.status, load]);
 
   const onRetry = async () => {
     setRetryBusy(true);

@@ -128,6 +128,69 @@ describe('MeetingDetail — processing', () => {
   });
 });
 
+describe('MeetingDetail — SSE live updates', () => {
+  class FakeEventSource {
+    static instances: FakeEventSource[] = [];
+    url: string;
+    private listeners = new Map<string, Set<(e: MessageEvent) => void>>();
+    constructor(url: string) {
+      this.url = url;
+      FakeEventSource.instances.push(this);
+    }
+    addEventListener(t: string, fn: (e: MessageEvent) => void): void {
+      if (!this.listeners.has(t)) this.listeners.set(t, new Set());
+      this.listeners.get(t)!.add(fn);
+    }
+    removeEventListener(t: string, fn: (e: MessageEvent) => void): void {
+      this.listeners.get(t)?.delete(fn);
+    }
+    close(): void {}
+    emit(t: string, data: unknown): void {
+      const event = new MessageEvent(t, { data: JSON.stringify(data) });
+      this.listeners.get(t)?.forEach((fn) => fn(event));
+    }
+  }
+
+  beforeEach(() => {
+    FakeEventSource.instances = [];
+    (globalThis as unknown as { EventSource: typeof FakeEventSource }).EventSource =
+      FakeEventSource;
+  });
+
+  afterEach(() => {
+    delete (globalThis as unknown as { EventSource?: unknown }).EventSource;
+  });
+
+  it('re-fetches detail and re-renders when SSE announces completion', async () => {
+    fetchMock.mockResolvedValueOnce(
+      okResponse({
+        ...baseMeeting,
+        status: 'processing',
+        decisions: [],
+        action_items: [],
+        summary: null,
+      }),
+    );
+    fetchMock.mockResolvedValue(okResponse(baseMeeting));
+
+    render(<MeetingDetail meetingId="m-1" />);
+
+    await screen.findAllByTestId('agent-skeleton');
+    await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1));
+
+    await act(async () => {
+      FakeEventSource.instances[0].emit('status', {
+        status: 'complete',
+        error_message: null,
+      });
+    });
+
+    expect(
+      await screen.findByRole('heading', { name: 'Adopt pgvector' }),
+    ).toBeInTheDocument();
+  });
+});
+
 describe('MeetingDetail — failed', () => {
   it('shows the error message and a retry button', async () => {
     fetchMock.mockResolvedValue(
