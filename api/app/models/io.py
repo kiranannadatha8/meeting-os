@@ -67,6 +67,23 @@ class SummaryOut(BaseModel):
     highlights: list[str]
 
 
+class IntegrationProvider(StrEnum):
+    linear = "linear"
+    gmail = "gmail"
+
+
+class IntegrationUpsertRequest(BaseModel):
+    user_id: str = Field(..., min_length=1, max_length=255)
+    provider: IntegrationProvider
+    api_key: str = Field(..., min_length=1)
+    metadata: dict[str, object] | None = None
+
+
+class IntegrationStatus(BaseModel):
+    linear: bool
+    gmail: bool
+
+
 class MeetingDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

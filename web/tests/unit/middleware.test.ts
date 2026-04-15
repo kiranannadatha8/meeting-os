@@ -8,4 +8,12 @@ describe('middleware matcher', () => {
       expect.arrayContaining(['/meetings/:path*']),
     );
   });
+
+  it('guards /settings and any nested path', async () => {
+    const mod = await import('@/middleware');
+    const { config } = mod;
+    expect(config.matcher).toEqual(
+      expect.arrayContaining(['/settings/:path*']),
+    );
+  });
 });

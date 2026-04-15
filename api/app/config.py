@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     langchain_project: str = "meeting-os-dev"
     langchain_api_key: str = ""
 
+    meeting_os_encryption_key: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:
