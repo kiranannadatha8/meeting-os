@@ -1,0 +1,15 @@
+{
+  "name": "meeting-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-agent meeting intelligence — root workspace",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @meeting-os/web dev",
+    "build:web": "pnpm --filter @meeting-os/web build",
+    "test:web": "pnpm --filter @meeting-os/web test",
+    "lint:web": "pnpm --filter @meeting-os/web lint"
+  }
+}

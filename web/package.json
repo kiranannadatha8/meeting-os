@@ -1,0 +1,12 @@
+{
+  "name": "@meeting-os/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MeetingOS web application (Next.js 14)",
+  "scripts": {
+    "dev": "echo 'Web app not yet scaffolded — see T04' && exit 0",
+    "build": "echo 'Web app not yet scaffolded — see T04' && exit 0",
+    "test": "echo 'No tests yet — see T04' && exit 0",
+    "lint": "echo 'No linter yet — see T04' && exit 0"
+  }
+}
