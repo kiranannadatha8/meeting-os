@@ -13,9 +13,11 @@ from __future__ import annotations
 
 from langgraph.graph import END, StateGraph
 
-from app.agents._base import AgentNode, PipelineState, empty_summary
+from app.agents._base import AgentNode, PipelineState
 from app.agents.action_item import action_node as _claude_action
 from app.agents.decision import decision_node as _claude_decision
+from app.agents.merge import merge_node as _merge
+from app.agents.summary import summary_node as _claude_summary
 
 
 def _load_transcript(state: PipelineState) -> PipelineState:
@@ -35,13 +37,10 @@ def _default_action(state: PipelineState) -> PipelineState:
     return _claude_action(state)
 
 
-def _noop_summary(state: PipelineState) -> PipelineState:
-    return {"summary": empty_summary()}
-
-
-def _merge(state: PipelineState) -> PipelineState:
-    """Fan-in point. T13 will enrich summary text with decision/action refs."""
-    return {}
+def _default_summary(state: PipelineState) -> PipelineState:
+    """Production summary agent. Falls back to empty summary when Claude is
+    unavailable."""
+    return _claude_summary(state)
 
 
 def build_agent_graph(
@@ -55,7 +54,7 @@ def build_agent_graph(
     graph.add_node("load", _load_transcript)
     graph.add_node("decision", decision_node or _default_decision)
     graph.add_node("action", action_node or _default_action)
-    graph.add_node("summary", summary_node or _noop_summary)
+    graph.add_node("summary", summary_node or _default_summary)
     graph.add_node("merge", _merge)
 
     graph.set_entry_point("load")
