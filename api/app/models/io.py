@@ -118,6 +118,18 @@ class GmailDispatchResponse(BaseModel):
     draft_url: str
 
 
+class SearchResult(BaseModel):
+    meeting_id: UUID
+    meeting_title: str
+    meeting_created_at: datetime
+    chunk_content: str
+    distance: float
+
+
+class SearchResponse(BaseModel):
+    results: list[SearchResult]
+
+
 class MeetingDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
