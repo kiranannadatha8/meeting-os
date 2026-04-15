@@ -74,6 +74,49 @@ describe('MeetingDetail — complete', () => {
   });
 });
 
+describe('MeetingDetail — dispatch buttons', () => {
+  it('renders Linear and Gmail dispatch buttons when status is complete', async () => {
+    fetchMock.mockResolvedValue(okResponse(baseMeeting));
+
+    render(<MeetingDetail meetingId="m-1" />);
+
+    expect(
+      await screen.findByRole('button', { name: /create linear tickets/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /draft gmail follow-up/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('opens the Linear dispatch modal on click', async () => {
+    fetchMock.mockResolvedValue(okResponse(baseMeeting));
+
+    render(<MeetingDetail meetingId="m-1" />);
+    const button = await screen.findByRole('button', {
+      name: /create linear tickets/i,
+    });
+    fireEvent.click(button);
+    // Dialog renders with the Linear-specific Team ID input
+    expect(
+      screen.getByRole('dialog', { name: /create linear tickets/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/team id/i)).toBeInTheDocument();
+  });
+
+  it('hides dispatch buttons when the meeting is still processing', async () => {
+    fetchMock.mockResolvedValue(
+      okResponse({ ...baseMeeting, status: 'processing' }),
+    );
+
+    render(<MeetingDetail meetingId="m-1" />);
+
+    await screen.findAllByTestId('agent-skeleton');
+    expect(
+      screen.queryByRole('button', { name: /create linear tickets/i }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe('MeetingDetail — processing', () => {
   it('shows skeleton loaders for each section', async () => {
     fetchMock.mockResolvedValue(okResponse({ ...baseMeeting, status: 'processing' }));

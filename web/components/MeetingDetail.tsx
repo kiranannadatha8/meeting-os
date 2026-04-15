@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { ActionItemTable } from '@/components/ActionItemTable';
 import { DecisionCard } from '@/components/DecisionCard';
+import { DispatchModal, type DispatchMode } from '@/components/DispatchModal';
 import { SummaryPanel } from '@/components/SummaryPanel';
 import type { MeetingDetail as MeetingDetailPayload } from '@/lib/meeting-detail';
 
@@ -33,6 +34,7 @@ export function MeetingDetail({ meetingId }: MeetingDetailProps): JSX.Element {
   const [meeting, setMeeting] = useState<MeetingDetailPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retryBusy, setRetryBusy] = useState(false);
+  const [dispatchMode, setDispatchMode] = useState<DispatchMode | null>(null);
 
   const load = useCallback(async (): Promise<MeetingDetailPayload | null> => {
     try {
@@ -148,9 +150,39 @@ export function MeetingDetail({ meetingId }: MeetingDetailProps): JSX.Element {
         {meeting.status === 'processing' || meeting.status === 'queued' ? (
           <Skeleton />
         ) : (
-          <ActionItemTable items={meeting.action_items} />
+          <>
+            <ActionItemTable items={meeting.action_items} />
+            {meeting.status === 'complete' && meeting.action_items.length > 0 && (
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDispatchMode('linear')}
+                  className="rounded border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-50"
+                >
+                  Create Linear tickets
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDispatchMode('gmail')}
+                  className="rounded border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-50"
+                >
+                  Draft Gmail follow-up
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
+
+      {dispatchMode !== null && (
+        <DispatchModal
+          mode={dispatchMode}
+          meetingId={meeting.id}
+          actionItems={meeting.action_items}
+          isOpen
+          onClose={() => setDispatchMode(null)}
+        />
+      )}
 
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
