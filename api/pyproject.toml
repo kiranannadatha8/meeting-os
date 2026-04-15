@@ -17,6 +17,7 @@ dependencies = [
     "bullmq>=2.20.0",
     "openai>=1.40.0",
     "tiktoken>=0.7.0",
+    "langgraph>=0.2.50",
 ]
 
 [dependency-groups]

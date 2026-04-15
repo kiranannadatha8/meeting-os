@@ -8,6 +8,7 @@ error message captured for the UI.
 from __future__ import annotations
 
 import logging
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import select
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.db import models
 from app.db.session import SessionLocal
+from app.graph import build_agent_graph
 from app.ingestion.chunker import chunk_text
 from app.ingestion.embedder import embed_chunks
 
@@ -64,20 +66,25 @@ def process_meeting(meeting_id: str) -> None:
 
 
 def _run_agents(meeting_id: UUID, transcript: str) -> None:
-    """T07: chunk + embed + persist. T10 will replace this with the LangGraph DAG."""
+    """T07 chunks + embeds; T10 runs the LangGraph DAG and persists agent output."""
     chunks = chunk_text(transcript)
-    if not chunks:
+    if chunks:
+        embeddings = embed_chunks(chunks)
+        if len(embeddings) != len(chunks):
+            raise RuntimeError(
+                f"Embedding count mismatch: {len(embeddings)} vectors for {len(chunks)} chunks"
+            )
+    else:
         logger.info("Meeting %s has empty transcript; skipping chunk persistence", meeting_id)
-        return
+        embeddings = []
 
-    embeddings = embed_chunks(chunks)
-    if len(embeddings) != len(chunks):
-        raise RuntimeError(
-            f"Embedding count mismatch: {len(embeddings)} vectors for {len(chunks)} chunks"
-        )
+    graph = build_agent_graph()
+    state = graph.invoke({"meeting_id": str(meeting_id), "transcript": transcript})
 
     with SessionLocal() as session:
-        _persist_chunks(session, meeting_id, chunks, embeddings)
+        if chunks:
+            _persist_chunks(session, meeting_id, chunks, embeddings)
+        _persist_agent_output(session, meeting_id, state)
         session.commit()
 
 
@@ -97,3 +104,39 @@ def _persist_chunks(
         for i, (content, embedding) in enumerate(zip(chunks, embeddings, strict=True))
     ]
     session.add_all(rows)
+
+
+def _persist_agent_output(session: Session, meeting_id: UUID, state: dict) -> None:
+    """Write decisions, action items, and the summary row from graph state.
+
+    T10 ships with no-op agents so `decisions` / `action_items` are empty;
+    the summary row is always written so the results UI can assume it exists.
+    """
+    for decision in state.get("decisions") or []:
+        session.add(
+            models.Decision(
+                meeting_id=meeting_id,
+                title=decision["title"],
+                rationale=decision["rationale"],
+                source_quote=decision["source_quote"],
+            )
+        )
+    for item in state.get("action_items") or []:
+        due = item.get("due_date")
+        session.add(
+            models.ActionItem(
+                meeting_id=meeting_id,
+                title=item["title"],
+                owner=item.get("owner"),
+                due_date=date.fromisoformat(due) if isinstance(due, str) else due,
+                source_quote=item["source_quote"],
+            )
+        )
+    summary = state.get("summary") or {"tldr": "", "highlights": []}
+    session.add(
+        models.Summary(
+            meeting_id=meeting_id,
+            tldr=summary.get("tldr", ""),
+            highlights=list(summary.get("highlights") or []),
+        )
+    )

@@ -109,6 +109,24 @@ def test_pipeline_persists_chunks_with_embeddings(monkeypatch) -> None:
     assert _status(meeting_id) == "complete"
 
 
+def test_pipeline_persists_placeholder_summary_row(monkeypatch) -> None:
+    """T10: graph runs on every meeting and writes a (placeholder) Summary row."""
+    monkeypatch.setattr(
+        "app.pipeline.embed_chunks",
+        lambda chunks: [[0.0] * EMBEDDING_DIM for _ in chunks],
+    )
+    meeting_id = _seed_meeting(transcript="hello world")
+
+    process_meeting(str(meeting_id))
+
+    with SessionLocal() as session:
+        summary = session.execute(
+            select(models.Summary).where(models.Summary.meeting_id == meeting_id)
+        ).scalar_one()
+    assert summary.tldr == ""
+    assert summary.highlights == []
+
+
 def test_pipeline_marks_failed_when_embedding_exhausts_retries(monkeypatch) -> None:
     meeting_id = _seed_meeting(transcript="word " * 100)
 
