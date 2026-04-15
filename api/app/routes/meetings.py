@@ -9,7 +9,17 @@ from sqlalchemy.orm import Session
 
 from app.db import models
 from app.db.session import get_db
-from app.ingestion.parser import UnsupportedTranscriptFormatError, parse_transcript
+from app.ingestion.parser import (
+    UnsupportedTranscriptFormatError,
+    classify_source,
+    parse_transcript,
+)
+from app.ingestion.whisper_adapter import (
+    AUDIO_SIZE_LIMIT_BYTES,
+    AudioTooLargeError,
+    TranscriptionError,
+    transcribe_audio,
+)
 from app.models.io import MeetingCreateResponse, MeetingSummaryItem
 from app.queue import enqueue_meeting_job
 
@@ -30,15 +40,40 @@ async def create_meeting(
     body = await file.read()
     filename = file.filename or ""
 
-    try:
-        transcript = parse_transcript(filename, body)
-    except UnsupportedTranscriptFormatError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    kind = classify_source(filename)
+    if kind == "unsupported":
+        raise HTTPException(
+            status_code=422, detail=f"Unsupported upload type: {filename or '<no filename>'}"
+        )
+
+    if kind == "text":
+        try:
+            transcript = parse_transcript(filename, body)
+        except UnsupportedTranscriptFormatError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        source_type = "text"
+    else:  # audio
+        if len(body) > AUDIO_SIZE_LIMIT_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Audio payload exceeds {AUDIO_SIZE_LIMIT_BYTES} byte limit",
+            )
+        try:
+            transcript = transcribe_audio(body, filename=filename)
+        except AudioTooLargeError as exc:
+            raise HTTPException(status_code=413, detail=str(exc)) from exc
+        except TranscriptionError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        finally:
+            # Audio bytes never get persisted — clearing the local reference
+            # is what "delete after transcription" means in the in-memory path.
+            del body
+        source_type = "audio"
 
     meeting = models.Meeting(
         user_id=user_id,
         title=title,
-        source_type="text",
+        source_type=source_type,
         source_filename=filename,
         transcript=transcript,
         status="queued",

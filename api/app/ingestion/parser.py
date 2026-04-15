@@ -1,13 +1,33 @@
 """Transcript parsing — turn an uploaded file (.txt or .vtt) into raw text.
 
 Pure functions, no I/O. Decoded text is what the chunker eats next (T07).
+Audio uploads (.mp3/.wav) are classified separately and routed through the
+Whisper adapter; this module keeps its zero-I/O posture.
 """
 from __future__ import annotations
 
 import re
 from pathlib import PurePosixPath
+from typing import Literal
 
 SUPPORTED_EXTENSIONS = frozenset({".txt", ".vtt"})
+AUDIO_EXTENSIONS = frozenset({".mp3", ".wav"})
+
+SourceKind = Literal["text", "audio", "unsupported"]
+
+
+def classify_source(filename: str) -> SourceKind:
+    """Discriminate uploads into the path that should handle them.
+
+    The route handler uses this to decide whether to call `parse_transcript`
+    (text path) or `transcribe_audio` (audio path) before persisting.
+    """
+    extension = PurePosixPath(filename).suffix.lower()
+    if extension in SUPPORTED_EXTENSIONS:
+        return "text"
+    if extension in AUDIO_EXTENSIONS:
+        return "audio"
+    return "unsupported"
 
 # WebVTT cue timestamp lines look like: "00:00:01.000 --> 00:00:04.000"
 _VTT_TIMESTAMP_RE = re.compile(

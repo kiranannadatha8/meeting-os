@@ -5,6 +5,7 @@ import pytest
 
 from app.ingestion.parser import (
     UnsupportedTranscriptFormatError,
+    classify_source,
     parse_transcript,
 )
 
@@ -62,3 +63,17 @@ class TestUnsupportedExtensions:
     def test_extension_match_is_case_insensitive(self) -> None:
         result = parse_transcript("Notes.TXT", b"hello")
         assert result == "hello"
+
+
+class TestClassifySource:
+    @pytest.mark.parametrize("filename", ["notes.txt", "notes.TXT", "call.vtt", "Call.VTT"])
+    def test_text_extensions_classified_as_text(self, filename: str) -> None:
+        assert classify_source(filename) == "text"
+
+    @pytest.mark.parametrize("filename", ["talk.mp3", "talk.MP3", "call.wav", "Call.WAV"])
+    def test_audio_extensions_classified_as_audio(self, filename: str) -> None:
+        assert classify_source(filename) == "audio"
+
+    @pytest.mark.parametrize("filename", ["doc.pdf", "image.png", "weird", "no_extension"])
+    def test_unknown_extensions_classified_as_unsupported(self, filename: str) -> None:
+        assert classify_source(filename) == "unsupported"
