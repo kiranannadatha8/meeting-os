@@ -84,6 +84,28 @@ class IntegrationStatus(BaseModel):
     gmail: bool
 
 
+class LinearDispatchRequest(BaseModel):
+    user_id: str = Field(..., min_length=1, max_length=255)
+    team_id: str = Field(..., min_length=1)
+    action_item_ids: list[UUID] = Field(..., min_length=1)
+
+
+class LinearDispatchCreated(BaseModel):
+    action_item_id: UUID
+    identifier: str
+    url: str
+
+
+class LinearDispatchError(BaseModel):
+    action_item_id: UUID | None
+    message: str
+
+
+class LinearDispatchResponse(BaseModel):
+    created: list[LinearDispatchCreated]
+    errors: list[LinearDispatchError]
+
+
 class MeetingDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
