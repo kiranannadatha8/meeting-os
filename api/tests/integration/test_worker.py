@@ -68,7 +68,16 @@ async def _run_worker_until(meeting_id: UUID, target: str) -> str:
         await worker.close()
 
 
-async def test_worker_processes_job_and_marks_complete(isolated_queue) -> None:
+async def test_worker_processes_job_and_marks_complete(
+    isolated_queue, monkeypatch
+) -> None:
+    from app.ingestion.embedder import EMBEDDING_DIM
+
+    monkeypatch.setattr(
+        "app.pipeline.embed_chunks",
+        lambda chunks: [[0.0] * EMBEDDING_DIM for _ in chunks],
+    )
+
     meeting_id = _seed_meeting()
     await enqueue_meeting_job(str(meeting_id))
 
@@ -80,10 +89,10 @@ async def test_worker_processes_job_and_marks_complete(isolated_queue) -> None:
 async def test_worker_marks_failed_when_pipeline_raises(
     isolated_queue, monkeypatch
 ) -> None:
-    monkeypatch.setattr(
-        "app.pipeline._run_agents",
-        lambda _: (_ for _ in ()).throw(RuntimeError("worker boom")),
-    )
+    def _boom(*_: object) -> None:
+        raise RuntimeError("worker boom")
+
+    monkeypatch.setattr("app.pipeline._run_agents", _boom)
 
     meeting_id = _seed_meeting()
     await enqueue_meeting_job(str(meeting_id))
