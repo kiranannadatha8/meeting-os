@@ -1,11 +1,18 @@
-"""POST /meetings — upload transcript and enqueue. GET /meetings — list per user."""
+"""Meeting routes.
+
+- `POST /meetings` — upload transcript (or audio) and enqueue for processing.
+- `GET /meetings` — list meetings scoped to a user.
+- `GET /meetings/{id}` — full detail payload consumed by the results UI.
+- `POST /meetings/{id}/retry` — re-queue a failed meeting.
+"""
 from __future__ import annotations
 
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, Query, UploadFile, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db import models
 from app.db.session import get_db
@@ -20,7 +27,11 @@ from app.ingestion.whisper_adapter import (
     TranscriptionError,
     transcribe_audio,
 )
-from app.models.io import MeetingCreateResponse, MeetingSummaryItem
+from app.models.io import (
+    MeetingCreateResponse,
+    MeetingDetail,
+    MeetingSummaryItem,
+)
 from app.queue import enqueue_meeting_job
 
 router = APIRouter(tags=["meetings"])
@@ -98,3 +109,52 @@ def list_meetings(
         .order_by(models.Meeting.created_at.desc())
     ).scalars().all()
     return [MeetingSummaryItem.model_validate(row) for row in rows]
+
+
+@router.get("/meetings/{meeting_id}", response_model=MeetingDetail)
+def get_meeting(
+    meeting_id: Annotated[UUID, Path()],
+    db: Annotated[Session, Depends(get_db)],
+) -> MeetingDetail:
+    """Return the full payload for the results UI.
+
+    `selectinload` keeps this to three queries (meeting + decisions/items +
+    summary) regardless of how many children exist — good enough at this scale.
+    """
+    meeting = db.execute(
+        select(models.Meeting)
+        .where(models.Meeting.id == meeting_id)
+        .options(
+            selectinload(models.Meeting.decisions),
+            selectinload(models.Meeting.action_items),
+            selectinload(models.Meeting.summary),
+        )
+    ).scalar_one_or_none()
+    if meeting is None:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    return MeetingDetail.model_validate(meeting)
+
+
+@router.post("/meetings/{meeting_id}/retry", response_model=MeetingCreateResponse, status_code=202)
+async def retry_meeting(
+    meeting_id: Annotated[UUID, Path()],
+    db: Annotated[Session, Depends(get_db)],
+) -> MeetingCreateResponse:
+    """Re-queue a failed meeting. Rejects anything not in `failed` so we
+    never trample an in-flight run."""
+    meeting = db.get(models.Meeting, meeting_id)
+    if meeting is None:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    if meeting.status != "failed":
+        raise HTTPException(
+            status_code=409,
+            detail=f"Only failed meetings can be retried; current status: {meeting.status}",
+        )
+    meeting.status = "queued"
+    meeting.error_message = None
+    db.commit()
+    db.refresh(meeting)
+
+    await enqueue_meeting_job(str(meeting.id))
+
+    return MeetingCreateResponse.model_validate(meeting)

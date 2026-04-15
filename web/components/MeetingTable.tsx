@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export interface MeetingSummary {
@@ -72,7 +73,11 @@ export function MeetingTable() {
       <tbody className="divide-y divide-slate-100">
         {meetings.map((m) => (
           <tr key={m.id}>
-            <td className="py-2 pr-4 font-medium">{m.title}</td>
+            <td className="py-2 pr-4 font-medium">
+              <Link href={`/meetings/${m.id}`} className="text-slate-900 hover:underline">
+                {m.title}
+              </Link>
+            </td>
             <td className="py-2 pr-4 text-slate-500">{formatDate(m.created_at)}</td>
             <td className="py-2">
               <span className={`inline-block rounded px-2 py-0.5 text-xs ${STATUS_CLASSES[m.status]}`}>
