@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.db import models
 from app.db.session import SessionLocal
-from app.graph import build_agent_graph
+from app.graph import run_graph
 from app.ingestion.chunker import chunk_text
 from app.ingestion.embedder import embed_chunks
 
@@ -78,13 +78,21 @@ def _run_agents(meeting_id: UUID, transcript: str) -> None:
         logger.info("Meeting %s has empty transcript; skipping chunk persistence", meeting_id)
         embeddings = []
 
-    graph = build_agent_graph()
-    state = graph.invoke({"meeting_id": str(meeting_id), "transcript": transcript})
+    state, run_ids = run_graph(
+        {"meeting_id": str(meeting_id), "transcript": transcript},
+        meeting_id=str(meeting_id),
+    )
 
     with SessionLocal() as session:
         if chunks:
             _persist_chunks(session, meeting_id, chunks, embeddings)
         _persist_agent_output(session, meeting_id, state)
+        if run_ids:
+            session.execute(
+                models.Meeting.__table__.update()
+                .where(models.Meeting.id == meeting_id)
+                .values(langsmith_run_ids=run_ids)
+            )
         session.commit()
 
 

@@ -82,3 +82,4 @@ class MeetingDetail(BaseModel):
     decisions: list[DecisionOut]
     action_items: list[ActionItemOut]
     summary: SummaryOut | None
+    langsmith_run_ids: list[str] | None = None

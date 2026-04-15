@@ -127,6 +127,48 @@ def test_pipeline_persists_placeholder_summary_row(monkeypatch) -> None:
     assert summary.highlights == []
 
 
+def test_pipeline_persists_langsmith_run_ids_when_tracing_captures_runs(monkeypatch) -> None:
+    """T14: captured LangSmith run IDs are written to meetings.langsmith_run_ids."""
+    monkeypatch.setattr(
+        "app.pipeline.embed_chunks",
+        lambda chunks: [[0.0] * EMBEDDING_DIM for _ in chunks],
+    )
+
+    def _fake_run_graph(state: dict, *, meeting_id: str):
+        return {"meeting_id": meeting_id}, ["run-a", "run-b"]
+
+    monkeypatch.setattr("app.pipeline.run_graph", _fake_run_graph)
+
+    meeting_id = _seed_meeting(transcript="hello world")
+
+    process_meeting(str(meeting_id))
+
+    with SessionLocal() as session:
+        run_ids = session.execute(
+            select(models.Meeting.langsmith_run_ids).where(models.Meeting.id == meeting_id)
+        ).scalar_one()
+    assert run_ids == ["run-a", "run-b"]
+
+
+def test_pipeline_captures_run_ids_from_real_graph_invocation(monkeypatch) -> None:
+    """End-to-end: the real graph fires LangChain callbacks, so `collect_runs`
+    returns IDs even when LangSmith is offline — and we persist them."""
+    monkeypatch.setattr(
+        "app.pipeline.embed_chunks",
+        lambda chunks: [[0.0] * EMBEDDING_DIM for _ in chunks],
+    )
+    meeting_id = _seed_meeting(transcript="hello world")
+
+    process_meeting(str(meeting_id))
+
+    with SessionLocal() as session:
+        run_ids = session.execute(
+            select(models.Meeting.langsmith_run_ids).where(models.Meeting.id == meeting_id)
+        ).scalar_one()
+    assert isinstance(run_ids, list) and len(run_ids) >= 1
+    assert all(isinstance(r, str) for r in run_ids)
+
+
 def test_pipeline_marks_failed_when_embedding_exhausts_retries(monkeypatch) -> None:
     meeting_id = _seed_meeting(transcript="word " * 100)
 

@@ -11,6 +11,7 @@ inject trackers without touching production code paths.
 """
 from __future__ import annotations
 
+from langchain_core.tracers.context import collect_runs
 from langgraph.graph import END, StateGraph
 
 from app.agents._base import AgentNode, PipelineState
@@ -67,3 +68,25 @@ def build_agent_graph(
     graph.add_edge("merge", END)
 
     return graph.compile()
+
+
+def run_graph(
+    state: PipelineState,
+    *,
+    meeting_id: str,
+) -> tuple[PipelineState, list[str]]:
+    """Invoke the compiled graph with LangSmith tracing metadata.
+
+    Returns `(final_state, run_ids)`. `run_ids` is empty when tracing is
+    disabled (LANGCHAIN_TRACING_V2 unset) — `collect_runs` handles that
+    gracefully, so this path stays safe in CI without mocks.
+    """
+    graph = build_agent_graph()
+    config = {
+        "metadata": {"meeting_id": meeting_id},
+        "tags": [f"meeting:{meeting_id}"],
+    }
+    with collect_runs() as cb:
+        result = graph.invoke(state, config=config)
+    run_ids = [str(run.id) for run in cb.traced_runs]
+    return result, run_ids
