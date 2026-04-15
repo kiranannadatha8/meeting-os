@@ -14,6 +14,7 @@ from __future__ import annotations
 from langgraph.graph import END, StateGraph
 
 from app.agents._base import AgentNode, PipelineState, empty_summary
+from app.agents.decision import decision_node as _claude_decision
 
 
 def _load_transcript(state: PipelineState) -> PipelineState:
@@ -21,8 +22,10 @@ def _load_transcript(state: PipelineState) -> PipelineState:
     return {}
 
 
-def _noop_decision(state: PipelineState) -> PipelineState:
-    return {"decisions": []}
+def _default_decision(state: PipelineState) -> PipelineState:
+    """Production decision agent. Falls back to empty list when Claude is
+    unavailable, so integration tests without credentials still pass."""
+    return _claude_decision(state)
 
 
 def _noop_action(state: PipelineState) -> PipelineState:
@@ -47,7 +50,7 @@ def build_agent_graph(
     """Compile the LangGraph DAG. Agent nodes are injectable for testing."""
     graph = StateGraph(PipelineState)
     graph.add_node("load", _load_transcript)
-    graph.add_node("decision", decision_node or _noop_decision)
+    graph.add_node("decision", decision_node or _default_decision)
     graph.add_node("action", action_node or _noop_action)
     graph.add_node("summary", summary_node or _noop_summary)
     graph.add_node("merge", _merge)

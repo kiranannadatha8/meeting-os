@@ -18,6 +18,7 @@ dependencies = [
     "openai>=1.40.0",
     "tiktoken>=0.7.0",
     "langgraph>=0.2.50",
+    "anthropic>=0.40.0",
 ]
 
 [dependency-groups]
