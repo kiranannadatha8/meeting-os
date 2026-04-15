@@ -24,6 +24,11 @@ class Settings(BaseSettings):
 
     meeting_os_encryption_key: str = ""
 
+    # Google OAuth app credentials — used to refresh Gmail access tokens
+    # against per-user refresh tokens stored in `integrations`.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

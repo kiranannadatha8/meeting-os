@@ -106,6 +106,18 @@ class LinearDispatchResponse(BaseModel):
     errors: list[LinearDispatchError]
 
 
+class GmailDispatchRequest(BaseModel):
+    user_id: str = Field(..., min_length=1, max_length=255)
+    recipients: list[str] = Field(..., min_length=1)
+    action_item_ids: list[UUID] = Field(..., min_length=1)
+    subject: str | None = None
+
+
+class GmailDispatchResponse(BaseModel):
+    draft_id: str
+    draft_url: str
+
+
 class MeetingDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
